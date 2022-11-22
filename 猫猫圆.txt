@@ -1,0 +1,218 @@
+//#pragma GCC optimize(2)
+//#pragma GCC optimize(3,"Ofast","inline")
+#include<bits/stdc++.h>
+using namespace std;
+//#define int long long
+//#define double long double
+const double eps = 1e-6;
+struct Point {
+    double x, y;
+    Point(double x = 0, double y = 0): x(x), y(y) { } //构造函数
+};
+
+//!注意区分点和向量
+typedef Point Vector;
+//向量平移之后还是那个向量，所以只需要原点和向量的终点即可
+//!向量 + 向量 = 向量，点 + 向量 = 向量
+Vector operator + (Vector A, Vector B) {
+    return Vector(A.x + B.x, A.y + B.y);
+}
+//!点 - 点 = 向量(向量BC = C - B)
+Vector operator - (Point A, Point B) {
+    return Vector(A.x - B.x, A.y - B.y);
+}
+//!向量 * 数 = 向量
+Vector operator * (Vector A, double p) {
+    return Vector(A.x * p, A.y * p);
+}
+//!向量 / 数= 向量
+Vector operator / (Vector A, double p) {
+    return Vector(A.x / p, A.y / p);
+}
+
+//!点/向量的比较函数
+bool operator < (const Point& a, const Point& b) {
+    return a.x < b.x || (a.x == b.x && a.y < b. y);
+}
+//!求极角//在极坐标系中，平面上任何一点到极点的连线和极轴的夹角叫做极角。
+//单位弧度rad
+struct Circle {
+    Point c;
+    double r;
+    Circle(Point c = Point(), double r = 0): c(c), r(r) {}
+    inline Point point(double a) { //通过圆心角求坐标
+        return Point(c.x + cos(a) * r, c.y + sin(a) * r);
+    }
+};
+inline Circle read_circle() {
+    Circle C;
+    //scanf("%lf%lf%lf", &C.c.x, &C.c.y, &C.r);
+    return C;
+}//!点积(满足交换律)
+double Dot(Vector A, Vector B) {
+    return A.x * B.x + A.y * B.y;
+}
+int dcmp(double x, double y = 0) {
+    if (fabs(x - y) < eps)
+        return 0;
+    if (x > y)
+        return 1;
+    return -1;
+}
+bool operator == (const Point& a, const Point& b) {
+    return !dcmp(a.x - b.x) && !dcmp(a.y - b.y);
+}
+double Length(Vector A) {
+    return sqrt(Dot(A, A));
+}
+double Polar_angle(Vector A) {
+    return atan2(A.y, A.x);
+}
+//两圆相交保存所有交点返回交点个数（至多两个）
+int get_circle_circle_intersection(Circle c1, Circle c2, vector<Point>& sol) {
+    double d = Length(c1.c - c2.c);
+    if (dcmp(d) == 0) {
+        if (dcmp(c1.r - c2.r) == 0)return -1; //两圆重合
+        return 0;
+    }
+    if (dcmp(c1.r + c2.r - d) < 0)return 0; //相离
+    if (dcmp(fabs(c1.r - c2.r) - d) > 0)return 0; //在另一个圆的内部
+
+    double a = Polar_angle(c2.c - c1.c);//向量c1c2的极角
+    double da = acos((c1.r * c1.r + d * d - c2.r * c2.r) / (2 * c1.r * d));
+    //c1c2到c1p1的角
+    Point p1 = c1.point(a - da), p2 = c1.point(a + da);
+    sol.push_back(p1);
+    if (p1 == p2)return 1;
+    sol.push_back(p2);
+    return 2;
+}
+int sgn(double x) {
+    if (fabs(x) < eps)
+        return 0;
+    if (x < 0)
+        return -1;
+    return 1;
+}
+double Cross(Vector A, Vector B) {
+    return A.x *  B.y - B.x * A.y;
+}
+bool OnSegment(Point p, Point a1, Point a2) {
+    return sgn(Cross(a1 - p, a2 - p)) == 0 && sgn(Dot(a1 - p, a2 - p)) < 0;
+}
+int is_point_in_polygon(Point p, vector<Point> poly) { //待判断的点和该多边形的所有点的合集
+    int wn = 0;
+    int n = poly.size();
+    for (int i = 0; i < n; ++i) {
+        if (OnSegment(p, poly[i], poly[(i + 1) % n])) return -1;
+        int k = sgn(Cross(poly[(i + 1) % n] - poly[i], p - poly[i]));
+        int d1 = sgn(poly[i].y - p.y);
+        int d2 = sgn(poly[(i + 1) % n].y - p.y);
+        if (k > 0 && d1 <= 0 && d2 > 0) wn++;
+        if (k < 0 && d2 <= 0 && d1 > 0) wn--;
+    }
+    if (wn != 0)
+        return 1;
+    return 0;
+}
+Point a[4], b[4];
+double k;
+Circle getCircle(Point a, Point b) {
+    Vector tmp11, tmp22;
+    tmp11.x = a.x, tmp11.y = a.y;
+    tmp22.x = b.x, tmp22.y = b.y;
+    double dis2 = Length(tmp11 - tmp22);
+    //    cout<<"dis2="<<dis2<<endl;
+    Circle p2;
+    double len11 = dis2 / (k - 1) + dis2, len22 = dis2 - dis2 / (k + 1);
+    double lens = (len11 + len22) / 2;
+
+    double chax2 = b.x - a.x;
+    double zhenx2 = lens * chax2 / dis2 ;
+    double chay2 = b.y - a.y;
+    double zheny2 = lens * chay2 / dis2 ;
+    double banjin2 = (len11 - len22) / 2;
+    //    cout<<"chax="<<chax2<<"chay="<<chay2<<endl;
+    p2.c.x = zhenx2 + a.x, p2.c.y = zheny2 + a.y;
+    p2.r = abs(banjin2);
+    return p2;
+}
+bool InCircle(Circle p0, Point p) {
+    double dis = sqrt((p.x - p0.c.x) * (p.x - p0.c.x) + (p.y - p0.c.y) * (p.y - p0.c.y));
+    return sgn(dis - p0.r) == 0;
+}
+signed main() {
+//    freopen("in.txt", "r", stdin);
+//    freopen("out.txt", "w", stdout);
+    //ios::sync_with_stdio(false);
+    //cin.tie(0);
+    //cout.tie(0);
+    int t;
+    scanf("%d", &t);
+    //int time=0;
+    while (t--) {
+        for (int i = 0; i < 4; i++) {
+            scanf("%lf %lf", &a[i].x, &a[i].y);
+        }
+        for (int i = 0; i < 4; i++) {
+            scanf("%lf %lf", &b[i].x, &b[i].y);
+        }
+        //bool fg = 0;
+        /*for (int i = 0; i < 4; i++) {
+            if (abs(a[i].x - b[i].x) <= eps && abs(a[i].y - b[i].y) <= eps) {
+                printf("%.7lf %.7lf\n", a[i].x, a[i].x);
+                fg = 1;
+                break;
+            }
+        }*/
+        //if (fg)continue;
+        Vector tmp1, tmp2;
+        tmp1.x = a[0].x, tmp1.y = a[0].y;
+        tmp2.x = a[3].x, tmp2.y = a[3].y;
+        Vector tmp3, tmp4;
+        tmp3.x = b[0].x, tmp3.y = b[0].y;
+        tmp4.x = b[3].x, tmp4.y = b[3].y;
+        k = Length(tmp1 - tmp2) / Length(tmp3 - tmp4);
+        Circle p1 = getCircle(a[0], b[0]);
+        Circle p2 = getCircle(a[1], b[1]);
+        Circle p3 = getCircle(a[2], b[2]);
+        Circle p4 = getCircle(a[3], b[3]);
+
+        //cout << p1.c.x << " " << p1.c.y << " " << p1.r << endl;;
+        //cout << p2.c.x << " " << p2.c.y << " " << p2.r << endl;;
+        vector<Point> sol;
+        get_circle_circle_intersection(p1, p2, sol);
+        for (auto x : sol) {
+            if (InCircle(p3, x) == 1 && InCircle(p4, x) == 1) {
+                //cout << fixed << setprecision(7) << "i=" <<time<< " ";
+                cout << fixed << setprecision(10) << x.x << " ";
+                cout << fixed << setprecision(10) << x.y << "\n";
+                //printf("%.9lf %.9lf\n",x.x,x.y);
+            }
+        }
+        //time++;
+    }
+    return 0;
+}
+/*
+1
+0 2
+2 2
+2 0
+0 0
+0 1
+1 1
+1 0
+0 0
+
+1
+-605 604
+604 605
+605 -604
+-604 -605
+569 -338
+568 -337
+569 -336
+570 -337
+
+*/
