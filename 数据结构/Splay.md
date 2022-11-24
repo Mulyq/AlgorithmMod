@@ -8,11 +8,9 @@ struct ND {
         val,    // 值
         cnt;    // 个数
 } nd[MAXN];
-
 void update(int x) {
     nd[x].siz = nd[nd[x].ch[0]].siz + nd[nd[x].ch[1]].siz + nd[x].cnt;
 }
-
 void rotate(int x) {
     int y = nd[x].f;
     int z = nd[y].f;
@@ -25,22 +23,19 @@ void rotate(int x) {
     nd[y].f = x;
     update(y), update(x);
 }
-
 void splay(int x, int goal) {
     while(nd[x].f != goal) {
         int y = nd[x].f;
         int z = nd[y].f;
         if(z != goal) {
-            if ((nd[z].ch[1] == y) == (nd[y].ch[1] == x)) {
-                rotate(y);
-            } 
+            (nd[z].ch[1] == y) == (nd[y].ch[1] == x) ?
+                rotate(y) : rotate(x);
         }
         rotate(x);
     }
     if(goal == 0) {
         root = x;
     }
-}
 
 void find(int x) {
     int u = root;
@@ -52,7 +47,6 @@ void find(int x) {
     }
     splay(u, 0);
 }
-
 void insert(int x) {
     int u = root, f = 0;
     while(u && nd[u].val != x) {
@@ -74,7 +68,6 @@ void insert(int x) {
     }
     splay(u, 0);
 }
-
 int Next(int x) {
     find(x);
     int u = root;
@@ -83,7 +76,6 @@ int Next(int x) {
     while(nd[u].ch[0]) u = nd[u].ch[0];
     return u;
 }
-
 int Pre(int x) {
     find(x);
     int u = root;
@@ -92,7 +84,6 @@ int Pre(int x) {
     while(nd[u].ch[1]) u = nd[u].ch[1];
     return u;
 }
-
 void del(int x) {
     int pre = Pre(x), next = Next(x);
     splay(pre, 0), splay(next, pre);
@@ -104,7 +95,6 @@ void del(int x) {
         nd[next].ch[0] = 0;
     }
 }
-
 int kth(int k) {
     int u = root;
     if(nd[u].siz < k) {
@@ -124,7 +114,6 @@ int kth(int k) {
         }
     }
 }
-
 #include <bits/stdc++.h>
 using namespace std;
 int main() {
