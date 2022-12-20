@@ -20,7 +20,7 @@ bool KMP(string s, string t) {
             j = ne[j - 1];
         }
         if(s[i] == t[j]) {
-            i ++, j ++;
+            j ++;
         }
         if(j == m) {
             return 1;
